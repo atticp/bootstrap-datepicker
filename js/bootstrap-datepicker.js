@@ -4,6 +4,7 @@
  * =========================================================
  * Copyright 2012 Stefan Petre
  * Improvements by Andrew Rowls
+ * Change date formatting to match .Net by Tom Waddell
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +37,7 @@
 		this.element = $(element);
 		this.language = options.language||this.element.data('date-language')||"en";
 		this.language = this.language in dates ? this.language : "en";
-		this.format = DPGlobal.parseFormat(options.format||this.element.data('date-format')||'mm/dd/yyyy');
+		this.format = DPGlobal.parseFormat(options.format||this.element.data('date-format')||'MM/dd/yyyy');
 		this.picker = $(DPGlobal.template)
 							.appendTo('body')
 							.on({
@@ -699,7 +700,7 @@
 		getDaysInMonth: function (year, month) {
 			return [31, (DPGlobal.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
 		},
-		validParts: /dd?|mm?|MM?|yy(?:yy)?/g,
+		validParts: /dd?|MM?M?M?|yy(?:yy)?/g,
 		nonpunctuation: /[^ -\/:-@\[-`{-~\t\n\r]+/g,
 		parseFormat: function(format){
 			// IE treats \0 as a string end in inputs (truncating the value),
@@ -741,11 +742,11 @@
 			var parts = date && date.match(this.nonpunctuation) || [],
 				date = new Date(),
 				parsed = {},
-				setters_order = ['yyyy', 'yy', 'M', 'MM', 'm', 'mm', 'd', 'dd'],
+				setters_order = ['yyyy', 'yy', 'M', 'MM', 'MMM', 'MMMM', 'd', 'dd'],
 				setters_map = {
 					yyyy: function(d,v){ return d.setUTCFullYear(v); },
 					yy: function(d,v){ return d.setUTCFullYear(2000+v); },
-					m: function(d,v){
+					M: function(d,v){
 						v -= 1;
 						while (v<0) v += 12;
 						v %= 12;
@@ -757,7 +758,7 @@
 					d: function(d,v){ return d.setUTCDate(v); }
 				},
 				val, filtered, part;
-			setters_map['M'] = setters_map['MM'] = setters_map['mm'] = setters_map['m'];
+			setters_map['MMMM'] = setters_map['MMM'] = setters_map['MM'] = setters_map['M'];
 			setters_map['dd'] = setters_map['d'];
 			date = UTCDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
 			if (parts.length == format.parts.length) {
@@ -766,7 +767,7 @@
 					part = format.parts[i];
 					if (isNaN(val)) {
 						switch(part) {
-							case 'MM':
+							case 'MMMM':
 								filtered = $(dates[language].months).filter(function(){
 									var m = this.slice(0, parts[i].length),
 										p = parts[i].slice(0, m.length);
@@ -774,7 +775,7 @@
 								});
 								val = $.inArray(filtered[0], dates[language].months) + 1;
 								break;
-							case 'M':
+							case 'MMM':
 								filtered = $(dates[language].monthsShort).filter(function(){
 									var m = this.slice(0, parts[i].length),
 										p = parts[i].slice(0, m.length);
@@ -797,14 +798,14 @@
 		formatDate: function(date, format, language){
 			var val = {
 				d: date.getUTCDate(),
-				m: date.getUTCMonth() + 1,
-				M: dates[language].monthsShort[date.getUTCMonth()],
-				MM: dates[language].months[date.getUTCMonth()],
+				M: date.getUTCMonth() + 1,
+				MMM: dates[language].monthsShort[date.getUTCMonth()],
+				MMMM: dates[language].months[date.getUTCMonth()],
 				yy: date.getUTCFullYear().toString().substring(2),
 				yyyy: date.getUTCFullYear()
 			};
 			val.dd = (val.d < 10 ? '0' : '') + val.d;
-			val.mm = (val.m < 10 ? '0' : '') + val.m;
+			val.MM = (val.M < 10 ? '0' : '') + val.M;
 			var date = [],
 				seps = $.extend([], format.separators);
 			for (var i=0, cnt = format.parts.length; i < cnt; i++) {
